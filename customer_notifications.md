@@ -38,7 +38,7 @@
 |---------|--------|----------|
 | **In-App (Push)** | ✅ Required | All real-time alerts inside the mobile/web app |
 | **SMS** | ✅ Required | OTP, payment reminders, overdue alerts to customers |
-| **WhatsApp** | ✅ Required | Invoice sharing, payment reminders, due alerts |
+| **WhatsApp** | ⚙️ Optional | Invoice sharing, payment reminders, due alerts — user must connect WhatsApp Business API |
 | **Email** | 🔜 Planned | Reports, subscription receipts, password reset |
 | **Push Notification (FCM)** | ✅ Required | Background alerts, low stock, expiry, credit overdue |
 
@@ -47,110 +47,110 @@
 ## 2. Authentication & User
 
 ### 2.1 OTP Verification
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| OTP Sent | `POST /api/auth/send-otp` | User (phone owner) | SMS | 🔴 Critical |
-| OTP Verified / Login Success | Successful OTP match | User | In-App | 🟡 Medium |
-| Login from New Device | JWT issued on unknown device | User | SMS + In-App | 🔴 Critical |
-| Password Changed | `PATCH /api/user/password` | User | SMS + In-App | 🔴 Critical |
-| Password Reset | `POST /api/v1/auth/reset-password` | User | SMS | 🔴 Critical |
-| Session Expired | JWT refresh fails | User | In-App | 🟡 Medium |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| OTP Sent | `POST /api/auth/send-otp` | User (phone owner) | SMS | 🔴 Critical | 🍞 Toast only |
+| OTP Verified / Login Success | Successful OTP match | User | In-App | 🟡 Medium | 🍞 Toast only |
+| Login from New Device | JWT issued on unknown device | User | SMS + In-App | 🔴 Critical | 🔔 In-App + Push |
+| Password Changed | `PATCH /api/user/password` | User | SMS + In-App | 🔴 Critical | 🍞+🔔 Both |
+| Password Reset | `POST /api/v1/auth/reset-password` | User | SMS | 🔴 Critical | 🍞 Toast only |
+| Session Expired | JWT refresh fails | User | In-App | 🟡 Medium | 🍞 Toast only |
 
 ### 2.2 Profile Updates
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Profile Updated | `PATCH /api/user` | User | In-App | 🟢 Low |
-| Phone Number Changed | Phone field updated | User | SMS (old & new) | 🔴 Critical |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Profile Updated | `PATCH /api/user` | User | In-App | 🟢 Low | 🍞 Toast only |
+| Phone Number Changed | Phone field updated | User | SMS (old & new) | 🔴 Critical | 🔔 In-App |
 
 ---
 
 ## 3. Sales Module
 
 ### 3.1 Sale Created
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Sale Completed (Cash) | `POST /api/sales` with paid=full | Business Owner / Staff | In-App | 🟡 Medium |
-| Sale on Credit Created | Sale with due amount > 0 | Business Owner | In-App | 🟠 High |
-| Invoice Generated | Sale confirmed | Customer (optional) | WhatsApp / SMS | 🟡 Medium |
-| Credit Limit Exceeded During Sale | `POST /api/credit/check-limit` breached | Business Owner | In-App | 🔴 Critical |
-| Stock Near Zero After Sale | Stock falls to min threshold | Business Owner / Manager | In-App + Push | 🟠 High |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Sale Completed (Cash) | `POST /api/sales` with paid=full | Business Owner / Staff | In-App | 🟡 Medium | 🍞 Toast only |
+| Sale on Credit Created | Sale with due amount > 0 | Business Owner | In-App | 🟠 High | 🍞+🔔 Both |
+| Invoice Generated | Sale confirmed | Customer (optional) | SMS (+ WhatsApp optional) | 🟡 Medium | 🍞 Toast only |
+| Credit Limit Exceeded During Sale | `POST /api/credit/check-limit` breached | Business Owner | In-App | 🔴 Critical | 🍞+🔔 Both |
+| Stock Near Zero After Sale | Stock falls to min threshold | Business Owner / Manager | In-App + Push | 🟠 High | 🔔 In-App + Push |
 
 ### 3.2 Sales Return
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Return Initiated | `POST /api/sales/returns` | Business Owner | In-App | 🟡 Medium |
-| Refund Processed (Cash/bKash) | Return with refund_method=cash/bKash | Customer | SMS / WhatsApp | 🟡 Medium |
-| Credit Note Issued | Return with refund_method=credit_note | Customer | WhatsApp / SMS | 🟡 Medium |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Return Initiated | `POST /api/sales/returns` | Business Owner | In-App | 🟡 Medium | 🍞 Toast only |
+| Refund Processed (Cash/bKash) | Return with refund_method=cash/bKash | Customer | SMS (+ WhatsApp optional) | 🟡 Medium | 🍞 Toast only |
+| Credit Note Issued | Return with refund_method=credit_note | Customer | SMS (+ WhatsApp optional) | 🟡 Medium | 🍞+🔔 Both |
 
 ### 3.3 Quotation (Sales Flow)
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Quotation Sent to Customer | Status → sent | Customer | WhatsApp / SMS | 🟡 Medium |
-| Quotation Accepted | Status → accepted | Business Owner / Staff | In-App | 🟡 Medium |
-| Quotation Rejected | Status → rejected | Business Owner | In-App | 🟡 Medium |
-| Quotation Expiring Soon | Validity date within 1–2 days | Business Owner | In-App + Push | 🟠 High |
-| Quotation Converted to Sale | Status → converted | Business Owner | In-App | 🟢 Low |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Quotation Sent to Customer | Status → sent | Customer | SMS (+ WhatsApp optional) | 🟡 Medium | 🍞 Toast only |
+| Quotation Accepted | Status → accepted | Business Owner / Staff | In-App + Push | 🟡 Medium | 🔔 In-App + Push |
+| Quotation Rejected | Status → rejected | Business Owner | In-App | 🟡 Medium | 🔔 In-App |
+| Quotation Expiring Soon | Validity date within 1–2 days | Business Owner | In-App + Push | 🟠 High | 🔔 In-App + Push |
+| Quotation Converted to Sale | Status → converted | Business Owner | In-App | 🟢 Low | 🍞 Toast only |
 
 ---
 
 ## 4. Purchase Module
 
 ### 4.1 Purchase Entry
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Purchase Recorded | `POST /api/purchases` | Business Owner | In-App | 🟢 Low |
-| Purchase on Credit | Due amount > 0 | Business Owner | In-App | 🟡 Medium |
-| Stock Updated After Purchase | Automatic stock addition | Manager | In-App | 🟢 Low |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Purchase Recorded | `POST /api/purchases` | Business Owner | In-App | 🟢 Low | 🍞 Toast only |
+| Purchase on Credit | Due amount > 0 | Business Owner | In-App | 🟡 Medium | 🍞+🔔 Both |
+| Stock Updated After Purchase | Automatic stock addition | Manager | In-App | 🟢 Low | 🍞 Toast only |
 
 ### 4.2 Purchase Orders
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| PO Created | `POST /api/purchase-orders` | Business Owner | In-App | 🟢 Low |
-| PO Approved | Status → approved | Purchaser / Manager | In-App | 🟡 Medium |
-| PO Partially Received | Status → partial | Business Owner | In-App | 🟡 Medium |
-| PO Fully Received | Status → received | Business Owner | In-App | 🟡 Medium |
-| Expected Delivery Date Passed | PO delivery date < today, status != received | Business Owner | In-App + Push | 🟠 High |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| PO Created | `POST /api/purchase-orders` | Business Owner | In-App | 🟢 Low | 🍞 Toast only |
+| PO Approved | Status → approved | Purchaser / Manager | In-App | 🟡 Medium | 🔔 In-App + Push |
+| PO Partially Received | Status → partial | Business Owner | In-App | 🟡 Medium | 🔔 In-App |
+| PO Fully Received | Status → received | Business Owner | In-App | 🟡 Medium | 🍞+🔔 Both |
+| Expected Delivery Date Passed | PO delivery date < today, status != received | Business Owner | In-App + Push | 🟠 High | 🔔 In-App + Push |
 
 ### 4.3 Purchase Returns
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Return to Supplier Created | `POST /api/purchases/returns` | Business Owner | In-App | 🟡 Medium |
-| Debit Note Issued to Supplier | Return with debit_note method | Business Owner | In-App | 🟡 Medium |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Return to Supplier Created | `POST /api/purchases/returns` | Business Owner | In-App | 🟡 Medium | 🍞 Toast only |
+| Debit Note Issued to Supplier | Return with debit_note method | Business Owner | In-App | 🟡 Medium | 🍞+🔔 Both |
 
 ---
 
 ## 5. Inventory & Stock
 
 ### 5.1 Low Stock Alerts
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Stock Falls Below Minimum | Any sale/adjustment reduces stock ≤ minStock | Business Owner / Manager | In-App + Push | 🔴 Critical |
-| Stock Reaches Zero | Stock = 0 after deduction | Business Owner | In-App + Push | 🔴 Critical |
-| Dead Stock Detected | Item not sold for X days (configurable) | Business Owner | In-App (Daily Digest) | 🟠 High |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Stock Falls Below Minimum | Any sale/adjustment reduces stock ≤ minStock | Business Owner / Manager | In-App + Push | 🔴 Critical | 🔔 In-App + Push |
+| Stock Reaches Zero | Stock = 0 after deduction | Business Owner | In-App + Push | 🔴 Critical | 🔔 In-App + Push |
+| Dead Stock Detected | Item not sold for X days (configurable) | Business Owner | In-App (Daily Digest) | 🟠 High | 🔔 In-App |
 
 ### 5.2 Stock Adjustment
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Manual Stock Adjusted | `POST /api/inventory/adjustment` | Business Owner | In-App | 🟡 Medium |
-| Stock Reduced (Damage/Loss) | Adjustment reason: damaged, lost, expired | Business Owner | In-App | 🟠 High |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Manual Stock Adjusted | `POST /api/inventory/adjustment` | Business Owner | In-App | 🟡 Medium | 🍞 Toast only |
+| Stock Reduced (Damage/Loss) | Adjustment reason: damaged, lost, expired | Business Owner | In-App | 🟠 High | 🍞+🔔 Both |
 
 ### 5.3 Inter-Branch Stock Transfer
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Transfer Initiated | `POST /api/inventory/transfer` | Source Branch Manager | In-App | 🟡 Medium |
-| Transfer Received | Stock updated at destination | Destination Branch Manager | In-App | 🟡 Medium |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Transfer Initiated | `POST /api/inventory/transfer` | Source Branch Manager | In-App | 🟡 Medium | 🍞 Toast only |
+| Transfer Received | Stock updated at destination | Destination Branch Manager | In-App + Push | 🟡 Medium | 🔔 In-App + Push |
 
 ---
 
 ## 6. Batch & Expiry
 
 ### 6.1 Expiry Alerts
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Batch Expiring — Critical | Days until expiry ≤ 7 | Business Owner | In-App + Push | 🔴 Critical |
-| Batch Expiring — Warning | Days until expiry ≤ 30 | Business Owner | In-App | 🟠 High |
-| Batch Expired | Expiry date passed, stock > 0 | Business Owner | In-App + Push | 🔴 Critical |
-| Batch Depleted | Batch quantity = 0 | Manager | In-App | 🟢 Low |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Batch Expiring — Critical | Days until expiry ≤ 7 | Business Owner | In-App + Push | 🔴 Critical | 🔔 In-App + Push |
+| Batch Expiring — Warning | Days until expiry ≤ 30 | Business Owner | In-App | 🟠 High | 🔔 In-App |
+| Batch Expired | Expiry date passed, stock > 0 | Business Owner | In-App + Push | 🔴 Critical | 🔔 In-App + Push |
+| Batch Depleted | Batch quantity = 0 | Manager | In-App | 🟢 Low | 🔔 In-App |
 
 > **Scheduling:** Run a daily cron job at 8:00 AM to check `GET /api/batches/expiry-alerts` and dispatch notifications accordingly.
 
@@ -159,161 +159,161 @@
 ## 7. Payments & Collections
 
 ### 7.1 Customer Payments
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Payment Received from Customer | `POST /api/payments` (type=received) | Business Owner | In-App | 🟡 Medium |
-| Payment Receipt Sent | Payment confirmed | Customer | WhatsApp / SMS | 🟡 Medium |
-| Partial Payment Recorded | Payment < outstanding due | Business Owner | In-App | 🟡 Medium |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Payment Received from Customer | `POST /api/payments` (type=received) | Business Owner | In-App | 🟡 Medium | 🍞 Toast only |
+| Payment Receipt Sent | Payment confirmed | Customer | SMS (+ WhatsApp optional) | 🟡 Medium | 🍞 Toast only |
+| Partial Payment Recorded | Payment < outstanding due | Business Owner | In-App | 🟡 Medium | 🍞+🔔 Both |
 
 ### 7.2 Supplier Payments
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Payment Made to Supplier | `POST /api/supplier-payments` | Business Owner | In-App | 🟢 Low |
-| Supplier Due Reminder | Supplier balance overdue | Business Owner | In-App (Daily) | 🟠 High |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Payment Made to Supplier | `POST /api/supplier-payments` | Business Owner | In-App | 🟢 Low | 🍞 Toast only |
+| Supplier Due Reminder | Supplier balance overdue | Business Owner | In-App (Daily) | 🟠 High | 🔔 In-App |
 
 ### 7.3 Installment / Payment Plans
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Installment Due Today | Installment due_date = today | Business Owner | In-App + Push | 🟠 High |
-| Installment Overdue | Installment due_date < today, not paid | Business Owner | In-App + Push | 🔴 Critical |
-| Installment Due Reminder — Customer | 1 day before due date | Customer | SMS / WhatsApp | 🟠 High |
-| Installment Paid | Installment marked as paid | Business Owner | In-App | 🟢 Low |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Installment Due Today | Installment due_date = today | Business Owner | In-App + Push | 🟠 High | 🔔 In-App + Push |
+| Installment Overdue | Installment due_date < today, not paid | Business Owner | In-App + Push | 🔴 Critical | 🔔 In-App + Push |
+| Installment Due Reminder — Customer | 1 day before due date | Customer | SMS (+ WhatsApp optional) | 🟠 High | SMS (+ WhatsApp optional) |
+| Installment Paid | Installment marked as paid | Business Owner | In-App | 🟢 Low | 🍞 Toast only |
 
 ---
 
 ## 8. Credit Control
 
 ### 8.1 Credit Limit Alerts
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Credit Limit Approaching (80%) | Party's outstanding ≥ 80% of credit limit | Business Owner | In-App | 🟠 High |
-| Credit Limit Exceeded | Party's outstanding > credit limit | Business Owner | In-App + Push | 🔴 Critical |
-| Credit Overdue — 30 Days | Party balance overdue > 30 days | Business Owner | In-App | 🟠 High |
-| Credit Overdue — 60 Days | Party balance overdue > 60 days | Business Owner | In-App + Push | 🔴 Critical |
-| Credit Overdue — 90+ Days | Party balance overdue > 90 days | Business Owner | In-App + Push + SMS | 🔴 Critical |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Credit Limit Approaching (80%) | Party's outstanding ≥ 80% of credit limit | Business Owner | In-App | 🟠 High | 🍞+🔔 Both |
+| Credit Limit Exceeded | Party's outstanding > credit limit | Business Owner | In-App + Push | 🔴 Critical | 🍞+🔔 Both |
+| Credit Overdue — 30 Days | Party balance overdue > 30 days | Business Owner | In-App | 🟠 High | 🔔 In-App |
+| Credit Overdue — 60 Days | Party balance overdue > 60 days | Business Owner | In-App + Push | 🔴 Critical | 🔔 In-App + Push |
+| Credit Overdue — 90+ Days | Party balance overdue > 90 days | Business Owner | In-App + Push + SMS | 🔴 Critical | 🔔 In-App + Push |
 
 ### 8.2 Customer Payment Reminders
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Due Reminder (3 Days Before) | Party due date - 3 days | Customer | SMS / WhatsApp | 🟠 High |
-| Due Reminder (Due Date) | Party due date = today | Customer | SMS / WhatsApp | 🔴 Critical |
-| Overdue Reminder | Due date passed, balance > 0 | Customer | SMS / WhatsApp | 🔴 Critical |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Due Reminder (3 Days Before) | Party due date - 3 days | Customer | SMS (+ WhatsApp optional) | 🟠 High | SMS (+ WhatsApp optional) |
+| Due Reminder (Due Date) | Party due date = today | Customer | SMS (+ WhatsApp optional) | 🔴 Critical | SMS (+ WhatsApp optional) |
+| Overdue Reminder | Due date passed, balance > 0 | Customer | SMS (+ WhatsApp optional) | 🔴 Critical | SMS (+ WhatsApp optional) |
 
 ---
 
 ## 9. Quotations
 
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| New Quotation Created | `POST /api/quotations` | Business Owner | In-App | 🟢 Low |
-| Quotation Sent | Status → sent | Customer | WhatsApp / SMS | 🟡 Medium |
-| Quotation Expires in 1 Day | validity_date - 1 = today | Business Owner | In-App + Push | 🟠 High |
-| Quotation Expired | validity_date < today, status != converted | Business Owner | In-App | 🟡 Medium |
-| Customer Accepts Quotation | Status → accepted | Business Owner | In-App + Push | 🟠 High |
-| Quotation Converted to Invoice | Status → converted | Business Owner | In-App | 🟢 Low |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| New Quotation Created | `POST /api/quotations` | Business Owner | In-App | 🟢 Low | 🍞 Toast only |
+| Quotation Sent | Status → sent | Customer | SMS (+ WhatsApp optional) | 🟡 Medium | 🍞 Toast only |
+| Quotation Expires in 1 Day | validity_date - 1 = today | Business Owner | In-App + Push | 🟠 High | 🔔 In-App + Push |
+| Quotation Expired | validity_date < today, status != converted | Business Owner | In-App | 🟡 Medium | 🔔 In-App |
+| Customer Accepts Quotation | Status → accepted | Business Owner | In-App + Push | 🟠 High | 🔔 In-App + Push |
+| Quotation Converted to Invoice | Status → converted | Business Owner | In-App | 🟢 Low | 🍞 Toast only |
 
 ---
 
 ## 10. Returns Management
 
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Sale Return Created | `POST /api/sales/returns` | Business Owner | In-App | 🟡 Medium |
-| Purchase Return Created | `POST /api/purchases/returns` | Business Owner | In-App | 🟡 Medium |
-| Credit Note Created | `POST /api/credit-notes` | Customer | WhatsApp / SMS | 🟡 Medium |
-| Debit Note Created | `POST /api/debit-notes` | Business Owner | In-App | 🟡 Medium |
-| Credit Note Applied | `POST /api/credit-notes/[id]/apply` | Business Owner | In-App | 🟢 Low |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Sale Return Created | `POST /api/sales/returns` | Business Owner | In-App | 🟡 Medium | 🍞 Toast only |
+| Purchase Return Created | `POST /api/purchases/returns` | Business Owner | In-App | 🟡 Medium | 🍞 Toast only |
+| Credit Note Created | `POST /api/credit-notes` | Customer | SMS (+ WhatsApp optional) | 🟡 Medium | 🍞+🔔 Both |
+| Debit Note Created | `POST /api/debit-notes` | Business Owner | In-App | 🟡 Medium | 🍞+🔔 Both |
+| Credit Note Applied | `POST /api/credit-notes/[id]/apply` | Business Owner | In-App | 🟢 Low | 🍞 Toast only |
 
 ---
 
 ## 11. Expenses
 
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Large Expense Recorded | Expense amount > configurable threshold | Business Owner | In-App | 🟠 High |
-| Monthly Expense Budget Exceeded | Total expenses > budget (if set) | Business Owner | In-App + Push | 🔴 Critical |
-| Recurring Expense Reminder | Scheduled recurring expense due | Business Owner | In-App | 🟡 Medium |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Large Expense Recorded | Expense amount > configurable threshold | Business Owner | In-App | 🟠 High | 🍞+🔔 Both |
+| Monthly Expense Budget Exceeded | Total expenses > budget (if set) | Business Owner | In-App + Push | 🔴 Critical | 🔔 In-App + Push |
+| Recurring Expense Reminder | Scheduled recurring expense due | Business Owner | In-App | 🟡 Medium | 🔔 In-App |
 
 ---
 
 ## 12. Accounts & Cash
 
 ### 12.1 Account Transfers
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Fund Transfer Completed | `POST /api/accounts/transfers` | Business Owner | In-App | 🟢 Low |
-| Low Account Balance | Account balance < configured threshold | Business Owner | In-App + Push | 🟠 High |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Fund Transfer Completed | `POST /api/accounts/transfers` | Business Owner | In-App | 🟢 Low | 🍞 Toast only |
+| Low Account Balance | Account balance < configured threshold | Business Owner | In-App + Push | 🟠 High | 🔔 In-App + Push |
 
 ### 12.2 Cash Drawer
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Cash Drawer Opened | Session opened | Manager | In-App | 🟢 Low |
-| Cash Drawer Closed with Difference | Expected ≠ actual closing balance | Business Owner | In-App | 🟠 High |
-| Cash Drawer Not Closed (End of Day) | Session still open at EOD | Business Owner | In-App + Push | 🟠 High |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Cash Drawer Opened | Session opened | Manager | In-App | 🟢 Low | 🍞 Toast only |
+| Cash Drawer Closed with Difference | Expected ≠ actual closing balance | Business Owner | In-App | 🟠 High | 🔔 In-App |
+| Cash Drawer Not Closed (End of Day) | Session still open at EOD | Business Owner | In-App + Push | 🟠 High | 🔔 In-App + Push |
 
 ---
 
 ## 13. Subscription & Billing
 
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Subscription Payment Successful | Webhook: bKash / Stripe confirmed | Business Owner | In-App + Email | 🟡 Medium |
-| Subscription Payment Failed | Webhook: payment failed | Business Owner | In-App + SMS | 🔴 Critical |
-| Subscription Expiring in 7 Days | subscription.end_date - 7 = today | Business Owner | In-App + SMS | 🟠 High |
-| Subscription Expired | subscription.end_date < today | Business Owner | In-App + SMS | 🔴 Critical |
-| Plan Upgraded | Subscription plan changed to higher tier | Business Owner | In-App | 🟢 Low |
-| Plan Downgraded | Subscription plan changed to lower tier | Business Owner | In-App | 🟡 Medium |
-| Usage Limit Approaching | e.g. AI chats 90% used | Business Owner | In-App | 🟠 High |
-| Usage Limit Reached | e.g. items, staff, branches at max | Business Owner | In-App + Push | 🔴 Critical |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Subscription Payment Successful | Webhook: bKash / Stripe confirmed | Business Owner | In-App + Email | 🟡 Medium | 🔔 In-App |
+| Subscription Payment Failed | Webhook: payment failed | Business Owner | In-App + SMS | 🔴 Critical | 🔔 In-App + Push |
+| Subscription Expiring in 7 Days | subscription.end_date - 7 = today | Business Owner | In-App + SMS | 🟠 High | 🔔 In-App + Push |
+| Subscription Expired | subscription.end_date < today | Business Owner | In-App + SMS | 🔴 Critical | 🔔 In-App + Push |
+| Plan Upgraded | Subscription plan changed to higher tier | Business Owner | In-App | 🟢 Low | 🍞+🔔 Both |
+| Plan Downgraded | Subscription plan changed to lower tier | Business Owner | In-App | 🟡 Medium | 🔔 In-App |
+| Usage Limit Approaching | e.g. AI chats 90% used | Business Owner | In-App | 🟠 High | 🍞+🔔 Both |
+| Usage Limit Reached | e.g. items, staff, branches at max | Business Owner | In-App + Push | 🔴 Critical | 🍞+🔔 Both |
 
 ---
 
 ## 14. Staff & Role Management
 
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| New Staff Added | `POST /api/staff` | New Staff Member | SMS (Welcome) | 🟡 Medium |
-| Staff Role Changed | Role updated | Staff Member | In-App | 🟡 Medium |
-| Staff Account Deactivated | Staff deleted/deactivated | Business Owner | In-App | 🟡 Medium |
-| Staff Logged In | JWT issued for staff | Business Owner (audit) | In-App (silent log) | 🟢 Low |
-| Approval Request Created | `POST /api/approvals` | Approver (Owner) | In-App + Push | 🟠 High |
-| Approval Granted / Rejected | Approval status updated | Requesting Staff | In-App | 🟡 Medium |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| New Staff Added | `POST /api/staff` | New Staff Member | SMS (Welcome) | 🟡 Medium | 🍞+🔔 Both |
+| Staff Role Changed | Role updated | Staff Member | In-App | 🟡 Medium | 🍞+🔔 Both |
+| Staff Account Deactivated | Staff deleted/deactivated | Business Owner | In-App | 🟡 Medium | 🔔 In-App |
+| Staff Logged In | JWT issued for staff | Business Owner (audit) | In-App | 🟢 Low | 🔔 In-App (silent log) |
+| Approval Request Created | `POST /api/approvals` | Approver (Owner) | In-App + Push | 🟠 High | 🔔 In-App + Push |
+| Approval Granted / Rejected | Approval status updated | Requesting Staff | In-App | 🟡 Medium | 🍞+🔔 Both |
 
 ---
 
 ## 15. System & Audit
 
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Period Lock Applied | `POST /api/period-locks` | All Staff | In-App | 🟡 Medium |
-| Period Lock Removed | Lock deleted | All Staff | In-App | 🟡 Medium |
-| Data Export Completed | `GET /api/v1/export` | Requester | In-App + Email | 🟢 Low |
-| Bulk Import Completed | `POST /api/items/import` | Requester | In-App | 🟡 Medium |
-| Bulk Import Failed | Import with errors | Requester | In-App | 🟠 High |
-| Business Health Score Dropped | Score drops by > 10 points | Business Owner | In-App + Push | 🟠 High |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Period Lock Applied | `POST /api/period-locks` | All Staff | In-App | 🟡 Medium | 🍞+🔔 Both |
+| Period Lock Removed | Lock deleted | All Staff | In-App | 🟡 Medium | 🍞+🔔 Both |
+| Data Export Completed | `GET /api/v1/export` | Requester | In-App | 🟢 Low | 🍞 Toast only |
+| Bulk Import Completed | `POST /api/items/import` | Requester | In-App | 🟡 Medium | 🍞+🔔 Both |
+| Bulk Import Failed | Import with errors | Requester | In-App | 🟠 High | 🔔 In-App |
+| Business Health Score Dropped | Score drops by > 10 points | Business Owner | In-App + Push | 🟠 High | 🔔 In-App + Push |
 
 ---
 
 ## 16. Support Tickets
 
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| Ticket Created | `POST /api/support` | Business Owner | In-App | 🟢 Low |
-| Ticket Status Updated | Status → in_progress / resolved / closed | Business Owner | In-App | 🟡 Medium |
-| New Message on Ticket | `POST /api/support/[id]/message` | Both parties | In-App | 🟡 Medium |
-| Ticket Resolved | Status → resolved | Business Owner | In-App + Email | 🟡 Medium |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| Ticket Created | `POST /api/support` | Business Owner | In-App | 🟢 Low | 🍞 Toast only |
+| Ticket Status Updated | Status → in_progress / resolved / closed | Business Owner | In-App | 🟡 Medium | 🔔 In-App |
+| New Message on Ticket | `POST /api/support/[id]/message` | Both parties | In-App + Push | 🟡 Medium | 🔔 In-App + Push |
+| Ticket Resolved | Status → resolved | Business Owner | In-App | 🟡 Medium | 🍞+🔔 Both |
 
 ---
 
 ## 17. AI & Voice
 
-| Event | Trigger | Recipient | Channel | Priority |
-|-------|---------|-----------|---------|----------|
-| AI Daily Brief Ready | Generated each morning | Business Owner | In-App + Push | 🟡 Medium |
-| Draft Transaction Awaiting Confirmation | Voice command creates draft | User | In-App | 🟠 High |
-| Draft Transaction Expired (5 min) | Draft not confirmed in time | User | In-App | 🟡 Medium |
-| AI Chat Daily Limit Reached | Usage hits plan limit | User | In-App | 🟠 High |
-| Voice Command Processing Failed | `POST /api/voice` returns error | User | In-App | 🟡 Medium |
+| Event | Trigger | Recipient | Channel | Priority | Delivery |
+|-------|---------|-----------|---------|----------|----------|
+| AI Daily Brief Ready | Generated each morning | Business Owner | In-App + Push | 🟡 Medium | 🔔 In-App + Push |
+| Draft Transaction Awaiting Confirmation | Voice command creates draft | User | In-App | 🟠 High | 🍞+🔔 Both |
+| Draft Transaction Expired (5 min) | Draft not confirmed in time | User | In-App | 🟡 Medium | 🍞 Toast only |
+| AI Chat Daily Limit Reached | Usage hits plan limit | User | In-App | 🟠 High | 🍞+🔔 Both |
+| Voice Command Processing Failed | `POST /api/voice` returns error | User | In-App | 🟡 Medium | 🍞 Toast only |
 
 ---
 
