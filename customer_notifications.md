@@ -44,6 +44,53 @@
 
 ---
 
+## 📋 Quick Reference — Where SMS & Email Are Required
+
+> At-a-glance overview. All other events use In-App / Push only.
+
+### 📱 SMS — Required Events
+
+| # | Event | Recipient | Trigger |
+|---|-------|-----------|---------|
+| 1 | OTP Sent | User | Login / Register |
+| 2 | Login from New Device | User | Unknown device detected |
+| 3 | Password Changed | User | `PATCH /api/user/password` |
+| 4 | Password Reset | User | `POST /api/v1/auth/reset-password` |
+| 5 | Phone Number Changed | User (old & new number) | Phone field updated |
+| 6 | Invoice Sent to Customer | Customer | Sale confirmed |
+| 7 | Refund Processed | Customer | Return with cash/bKash refund |
+| 8 | Credit Note Issued | Customer | Return with credit_note method |
+| 9 | Quotation Sent | Customer | Status → sent |
+| 10 | Payment Receipt Sent | Customer | Payment confirmed |
+| 11 | Installment Due Reminder | Customer | 1 day before due date |
+| 12 | Due Reminder — 3 Days Before | Customer | Party due date - 3 days |
+| 13 | Due Reminder — Due Today | Customer | Party due date = today |
+| 14 | Overdue Reminder | Customer | Due date passed, balance > 0 |
+| 15 | Credit Note Created | Customer | `POST /api/credit-notes` |
+| 16 | New Staff Welcome | New Staff Member | `POST /api/staff` |
+| 17 | Subscription Payment Failed | Business Owner | Webhook: payment failed |
+| 18 | Subscription Expiring (7 days) | Business Owner | subscription.end_date - 7 = today |
+| 19 | Subscription Expired | Business Owner | subscription.end_date < today |
+| 20 | Credit Overdue — 90+ Days | Business Owner | Balance overdue > 90 days |
+
+---
+
+### 📧 Email — Required Events
+
+> Email is **planned** (🔜). Implement after SMS. Use for receipts and reports.
+
+| # | Event | Recipient | Trigger |
+|---|-------|-----------|---------|
+| 1 | Subscription Payment Successful | Business Owner | Webhook: bKash / Stripe confirmed |
+| 2 | Subscription Payment Failed | Business Owner | Webhook: payment failed |
+| 3 | Subscription Expiring (7 days) | Business Owner | subscription.end_date - 7 = today |
+| 4 | Subscription Expired | Business Owner | subscription.end_date < today |
+| 5 | Support Ticket Resolved | Business Owner | Status → resolved |
+| 6 | Data Export Completed | Requester | `GET /api/v1/export` |
+| 7 | Password Reset Link | User | `POST /api/v1/auth/reset-password` |
+
+---
+
 ## 2. Authentication & User
 
 ### 2.1 OTP Verification
