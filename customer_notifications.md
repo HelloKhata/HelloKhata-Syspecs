@@ -2,15 +2,6 @@
 
 This document outlines the key events and touchpoints in the VoiceERP system where customers should receive notifications (via Email, SMS, or Push Notification). Notifications are categorized by module.
 
-## 1. Sales Module
-Notifications related to customer orders, sales, and returns.
-
-*   **Order Confirmation:** Sent immediately when a new sale/order is created in the system. Should include order summary, total amount, and estimated delivery (if applicable).
-*   **Order Status Updates:**
-    *   *Processing:* Order is being prepared.
-    *   *Shipped/Dispatched:* Order has left the facility. Includes tracking information if available.
-    *   *Delivered:* Order has reached the customer.
-*   **Sale Return Confirmation:** Sent when a customer returns items. Acknowledges receipt of the returned items and outlines the refund/credit process.
 
 ## 2. Quotations Module
 Notifications related to pricing quotes provided to the customer.
